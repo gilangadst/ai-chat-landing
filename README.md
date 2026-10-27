@@ -13,11 +13,9 @@ Buka `http://localhost:4200`. Permintaan `/api` di-proxy ke `http://127.0.0.1:80
 
 ## Backend
 
-Letakkan file model di folder `backend/` (sejajar `main.py`):
+Saat backend dijalankan, CSV budaya diunduh dari [GitHub](https://raw.githubusercontent.com/gilangadst/ai-chat-landing/main/backend/data_deskripsi_budaya_final.csv) dan matriks pencarian dibuat ulang dari kolom `Deskripsi`. Backend memerlukan koneksi internet saat startup.
 
-- `data_deskripsi_budaya_final.csv`
-- `vectorizer_kaya.joblib`
-- `semua_deskripsi_tfidf_kaya.joblib`
+Letakkan file `vectorizer_kaya.joblib` di folder `backend/` (sejajar `main.py`). File CSV dan `semua_deskripsi_tfidf_kaya.joblib` lokal tidak diperlukan.
 
 Salin `backend/.env.example` menjadi `backend/.env` lalu isi `GOOGLE_API_KEY` jika ingin jawaban Gemini. Tanpa kunci, API memakai cadangan lokal dari dokumen TF-IDF.
 

@@ -1,7 +1,9 @@
 
+from io import BytesIO
 from pathlib import Path
 import logging
 import os
+from urllib.request import urlopen
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,6 +19,10 @@ except ImportError:
     load_dotenv = None
 
 BASE_DIR = Path(__file__).resolve().parent
+CSV_URL = (
+    "https://raw.githubusercontent.com/gilangadst/ai-chat-landing/"
+    "main/backend/data_deskripsi_budaya_final.csv"
+)
 if load_dotenv:
     load_dotenv(BASE_DIR / ".env")
 
@@ -34,17 +40,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 1. Load data dan model dari folder yang sama dengan main.py
+# Unduh CSV budaya dan bangun ulang matriks pencarian.
 df_clean = None
 vectorizer = None
 matrix = None
 try:
-    df_clean = pd.read_csv(BASE_DIR / "data_deskripsi_budaya_final.csv")
+    with urlopen(CSV_URL, timeout=30) as response:
+        df_clean = pd.read_csv(BytesIO(response.read()))
+
+    required_columns = {
+        "Nama Budaya",
+        "Kategori",
+        "Provinsi",
+        "Kabupaten",
+        "Deskripsi",
+    }
+    missing_columns = required_columns.difference(df_clean.columns)
+    if missing_columns:
+        raise ValueError(
+            f"CSV budaya tidak memiliki kolom yang diperlukan: {sorted(missing_columns)}"
+        )
+
     vectorizer = joblib.load(BASE_DIR / "vectorizer_kaya.joblib")
-    matrix = joblib.load(BASE_DIR / "semua_deskripsi_tfidf_kaya.joblib")
-    print("Model dan data berhasil dimuat.")
-except Exception as e:
-    print(f"Gagal memuat model: {e}")
+    descriptions = df_clean["Deskripsi"].fillna("").astype(str)
+    matrix = vectorizer.transform(descriptions)
+    logger.info("Culture CSV downloaded and retrieval matrix built (%d rows).", len(df_clean))
+except Exception:
+    logger.exception("Failed to download culture CSV or load retrieval vectorizer.")
 
 # 2. Inisialisasi Gemini Client menggunakan Environment Variable
 api_key = os.getenv("GOOGLE_API_KEY", "")
@@ -70,9 +92,9 @@ async def chat_endpoint(request: ChatRequest):
         raise HTTPException(
             status_code=503,
             detail=(
-                "Model atau data kebudayaan belum dimuat. "
-                "Letakkan data_deskripsi_budaya_final.csv, vectorizer_kaya.joblib, "
-                "dan semua_deskripsi_tfidf_kaya.joblib di folder backend."
+                "Data budaya dari GitHub atau vectorizer belum berhasil dimuat. "
+                "Periksa koneksi internet, URL CSV, dan file vectorizer_kaya.joblib "
+                "di folder backend."
             ),
         )
 
