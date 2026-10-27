@@ -1,0 +1,38 @@
+<button
+  class="fab"
+  type="button"
+  (click)="toggle()"
+  [attr.aria-expanded]="open()"
+  aria-controls="chat-panel"
+>
+  {{ open() ? 'Tutup' : 'Chat' }}
+</button>
+
+<section id="chat-panel" class="panel" [class.visible]="open()" [attr.hidden]="open() ? null : true">
+  <header>
+    <div>
+      <p class="title">Asisten Budaya</p>
+      <p class="status">{{ pending() ? 'Mengetik…' : 'RAG kebudayaan Indonesia' }}</p>
+    </div>
+  </header>
+
+  <div #thread class="thread">
+    @for (msg of messages(); track $index) {
+      <p class="bubble" [class.user]="msg.role === 'user'">{{ msg.text }}</p>
+    }
+  </div>
+
+  <form (ngSubmit)="send()">
+    <label class="sr-only" for="chat-input">Pesan</label>
+    <input
+      id="chat-input"
+      name="message"
+      [ngModel]="draft()"
+      (ngModelChange)="draft.set($event)"
+      placeholder="Tanya budaya Nusantara…"
+      autocomplete="off"
+      [disabled]="pending()"
+    />
+    <button type="submit" [disabled]="pending() || !draft().trim()">Kirim</button>
+  </form>
+</section>

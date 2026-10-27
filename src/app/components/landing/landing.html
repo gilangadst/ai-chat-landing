@@ -1,0 +1,90 @@
+<header class="nav">
+  <a class="brand" href="#top">Nusantara<span>AI</span></a>
+  <button class="menu-btn" type="button" (click)="toggleMenu()" [attr.aria-expanded]="menuOpen()">
+    Menu
+  </button>
+  <nav class="links" [class.open]="menuOpen()">
+    <a href="#fitur" (click)="closeMenu()">Fitur</a>
+    <a href="#cara-kerja" (click)="closeMenu()">Cara kerja</a>
+    <a href="#chat" (click)="closeMenu()">Chatbot</a>
+    <a class="cta" href="#chat" (click)="closeMenu()">Tanya budaya</a>
+  </nav>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <p class="eyebrow">Chatbot kebudayaan Indonesia · Angular + FastAPI</p>
+    <h1>Tanya warisan Nusantara, dapat jawaban dari data budaya.</h1>
+    <p class="lede">
+      Widget di halaman ini memanggil model RAG di <code>backend/main.py</code>: pencarian TF-IDF
+      pada deskripsi budaya, lalu Gemini merangkai jawaban. Tanpa kunci API, jawaban cadangan lokal tetap jalan.
+    </p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#chat">Buka chatbot</a>
+      <a class="btn ghost" href="#cara-kerja">Lihat alur model</a>
+    </div>
+    <div class="stats">
+      <div>
+        <strong>TF-IDF</strong>
+        <span>Cari dokumen budaya terdekat</span>
+      </div>
+      <div>
+        <strong>Gemini</strong>
+        <span>Jawaban ramah, khusus kebudayaan</span>
+      </div>
+      <div>
+        <strong>Riwayat</strong>
+        <span>Widget mengirim history percakapan</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="fitur" class="section">
+    <h2>Yang bisa ditanyakan</h2>
+    <div class="grid">
+      <article>
+        <h3>Tarian & upacara</h3>
+        <p>Cari nama tarian, makna, atau daerah asal dari korpus deskripsi budaya.</p>
+      </article>
+      <article>
+        <h3>Daerah & kategori</h3>
+        <p>Jawaban merujuk kabupaten, provinsi, dan kategori budaya yang paling mirip.</p>
+      </article>
+      <article>
+        <h3>Fokus Nusantara</h3>
+        <p>Model menolak sopan jika pertanyaan di luar kebudayaan Indonesia.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="cara-kerja" class="section">
+    <h2>Alur dari widget ke model Anda</h2>
+    <ol class="steps">
+      <li>
+        <span>01</span>
+        Angular mengirim <code>message</code> dan <code>history</code> ke <code>POST /api/chat</code>.
+      </li>
+      <li>
+        <span>02</span>
+        <code>main.py</code> mengukur kemiripan TF-IDF terhadap deskripsi budaya.
+      </li>
+      <li>
+        <span>03</span>
+        Jika relevan, Gemini (atau cadangan lokal) menyusun jawaban untuk pengunjung.
+      </li>
+    </ol>
+  </section>
+
+  <section id="chat" class="section cta-band">
+    <div>
+      <h2>Coba tanya sekarang</h2>
+      <p>
+        Klik Chat di kanan bawah. Contoh: “Apa itu Tari Saman?” atau “Ceritakan upacara adat di Bali.”
+      </p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>© {{ year }} Nusantara AI. Chatbot kebudayaan Indonesia.</p>
+</footer>
