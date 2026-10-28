@@ -13,7 +13,7 @@ Buka `http://localhost:4200`. Permintaan `/api` di-proxy ke `http://127.0.0.1:80
 
 ## Backend
 
-Saat backend dijalankan, CSV budaya diunduh dari [GitHub](https://raw.githubusercontent.com/gilangadst/ai-chat-landing/main/backend/data_deskripsi_budaya_final.csv) dan matriks pencarian dibuat ulang dari kolom `Deskripsi`. Backend memerlukan koneksi internet saat startup.
+Saat backend dijalankan, CSV budaya diunduh dari [GitHub](https://raw.githubusercontent.com/gilangadst/ai-chat-landing/main/backend/data_deskripsi_budaya_final.csv) dan matriks pencarian dibuat ulang dari kolom `Deskripsi`. Nama budaya yang disebut langsung dalam pertanyaan, termasuk nama dasar dari judul beralias seperti `Banondit (Rumput Kebar)`, diprioritaskan agar deskripsinya tepat digunakan sebagai konteks. Backend memerlukan koneksi internet saat startup.
 
 Letakkan file `vectorizer_kaya.joblib` di folder `backend/` (sejajar `main.py`). File CSV dan `semua_deskripsi_tfidf_kaya.joblib` lokal tidak diperlukan.
 

@@ -3,6 +3,7 @@ from io import BytesIO
 from pathlib import Path
 import logging
 import os
+import re
 from urllib.request import urlopen
 
 from fastapi import FastAPI, HTTPException
@@ -86,6 +87,22 @@ class ChatRequest(BaseModel):
     history: list[HistoryItem] = Field(default_factory=list)
 
 
+def find_named_culture_indices(question, cultures):
+    normalized_question = re.sub(r"\W+", " ", question.casefold()).strip()
+    normalized_question = f" {normalized_question} "
+    matched_indices = []
+
+    for index, name in enumerate(cultures["Nama Budaya"].fillna("").astype(str)):
+        names = {name, name.split("(", maxsplit=1)[0].strip()}
+        for candidate in names:
+            normalized_name = re.sub(r"\W+", " ", candidate.casefold()).strip()
+            if normalized_name and f" {normalized_name} " in normalized_question:
+                matched_indices.append(index)
+                break
+
+    return matched_indices
+
+
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
     if vectorizer is None or matrix is None or df_clean is None:
@@ -100,6 +117,7 @@ async def chat_endpoint(request: ChatRequest):
 
     pertanyaan = request.message
     riwayat = request.history
+    named_indices = find_named_culture_indices(pertanyaan, df_clean)
 
     # A. Hitung kemiripan TF-IDF lokal
     try:
@@ -110,7 +128,19 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Gagal memproses TF-IDF: {e}")
 
-    if skor_kemiripan < 0.08:
+    has_relevant_document = bool(named_indices) or skor_kemiripan >= 0.08
+    if named_indices:
+        selected_cultures = df_clean.iloc[named_indices]
+        context = "\n\n".join(
+            f"""
+            Nama Budaya: {culture['Nama Budaya']}
+            Kategori: {culture['Kategori']}
+            Asal Daerah: {culture['Kabupaten']}, {culture['Provinsi']}
+            Deskripsi Lengkap: {culture['Deskripsi']}
+            """
+            for _, culture in selected_cultures.iterrows()
+        )
+    elif skor_kemiripan < 0.08:
         context = "Tidak ada dokumen kebudayaan spesifik yang sangat relevan dengan pertanyaan ini."
     else:
         budaya_terpilih = df_clean.iloc[indeks_terbaik]
@@ -123,15 +153,20 @@ async def chat_endpoint(request: ChatRequest):
 
     if not client:
         logger.warning("Skipping Gemini: GOOGLE_API_KEY is not configured.")
-        if skor_kemiripan < 0.08:
+        if not has_relevant_document:
             return {
                 "reply": (
                     "Saya belum menemukan informasi yang cocok di data lokal, dan "
                     "Gemini belum dikonfigurasi untuk menjawab pertanyaan ini."
                 )
             }
-        budaya_terpilih = df_clean.iloc[indeks_terbaik]
-        reply = f"[Lokal] {budaya_terpilih['Nama Budaya']} berasal dari {budaya_terpilih['Kabupaten']}, {budaya_terpilih['Provinsi']}. Kategori: {budaya_terpilih['Kategori']}. {budaya_terpilih['Deskripsi'][:300]}..."
+        selected_indices = named_indices or [indeks_terbaik]
+        reply = "\n\n".join(
+            f"[Lokal] {culture['Nama Budaya']} berasal dari {culture['Kabupaten']}, "
+            f"{culture['Provinsi']}. Kategori: {culture['Kategori']}. "
+            f"{culture['Deskripsi'][:300]}..."
+            for _, culture in df_clean.iloc[selected_indices].iterrows()
+        )
         return {"reply": reply}
 
     # C. Bangun prompt RAG. Retrieval supplies context when available but does
