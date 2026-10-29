@@ -62,7 +62,7 @@ try:
             f"CSV budaya tidak memiliki kolom yang diperlukan: {sorted(missing_columns)}"
         )
 
-    vectorizer = joblib.load(BASE_DIR / "vectorizer_kaya.joblib")
+    vectorizer = joblib.load(BASE_DIR / "vectorizer_tfidf.joblib")
     descriptions = df_clean["Deskripsi"].fillna("").astype(str)
     matrix = vectorizer.transform(descriptions)
     logger.info("Culture CSV downloaded and retrieval matrix built (%d rows).", len(df_clean))
@@ -110,7 +110,7 @@ async def chat_endpoint(request: ChatRequest):
             status_code=503,
             detail=(
                 "Data budaya dari GitHub atau vectorizer belum berhasil dimuat. "
-                "Periksa koneksi internet, URL CSV, dan file vectorizer_kaya.joblib "
+                "Periksa koneksi internet, URL CSV, dan file vectorizer_tfidf.joblib "
                 "di folder backend."
             ),
         )
