@@ -22,7 +22,7 @@ except ImportError:
 BASE_DIR = Path(__file__).resolve().parent
 CSV_URL = (
     "https://raw.githubusercontent.com/gilangadst/ai-chat-landing/"
-    "main/backend/data_deskripsi_budaya_final.csv"
+    "main/backend/data_desc.csv"
 )
 if load_dotenv:
     load_dotenv(BASE_DIR / ".env")
